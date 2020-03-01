@@ -56,8 +56,11 @@ const sentry = setupSentry({ release })
 
 let popupIsOpen = false
 let notificationIsOpen = false
-const openMetamaskTabsIDs = {}
+const openMetamaskTabIds = {}
 const requestAccountTabIds = {}
+
+const originsWithOpenTabs = new Set()
+const externallyOpenedTabIds = new Map()
 
 // state persistence
 const inTest = process.env.IN_TEST === 'true'
@@ -156,6 +159,7 @@ initialize().catch(log.error)
  * @returns {Promise} - Setup complete.
  */
 async function initialize () {
+  setupBrowserListeners()
   const initState = await loadStateFromPersistence()
   const initLangCode = await getFirstPreferredLangCode()
   await setupController(initState, initLangCode)
@@ -251,9 +255,10 @@ function setupController (initState, initLangCode) {
     getRequestAccountTabIds: () => {
       return requestAccountTabIds
     },
-    getOpenMetamaskTabsIds: () => {
-      return openMetamaskTabsIDs
+    getOpenMetamaskTabIds: () => {
+      return openMetamaskTabIds
     },
+    openExtensionInBrowserExternal,
   })
 
   setupEnsIpfsResolver({
@@ -330,7 +335,7 @@ function setupController (initState, initLangCode) {
   ]
 
   const isClientOpenStatus = () => {
-    return popupIsOpen || Boolean(Object.keys(openMetamaskTabsIDs).length) || notificationIsOpen
+    return popupIsOpen || Boolean(Object.keys(openMetamaskTabIds).length) || notificationIsOpen
   }
 
   /**
@@ -379,10 +384,10 @@ function setupController (initState, initLangCode) {
 
       if (processName === ENVIRONMENT_TYPE_FULLSCREEN) {
         const tabId = remotePort.sender.tab.id
-        openMetamaskTabsIDs[tabId] = true
+        openMetamaskTabIds[tabId] = true
 
         endOfStream(portStream, () => {
-          delete openMetamaskTabsIDs[tabId]
+          delete openMetamaskTabIds[tabId]
           controller.isClientOpen = isClientOpenStatus()
         })
       }
@@ -457,7 +462,7 @@ function setupController (initState, initLangCode) {
  */
 function triggerUi () {
   extension.tabs.query({ active: true }, (tabs) => {
-    const currentlyActiveMetamaskTab = Boolean(tabs.find((tab) => openMetamaskTabsIDs[tab.id]))
+    const currentlyActiveMetamaskTab = Boolean(tabs.find((tab) => openMetamaskTabIds[tab.id]))
     if (!popupIsOpen && !currentlyActiveMetamaskTab && !notificationIsOpen) {
       notificationManager.showPopup()
     }
@@ -488,3 +493,63 @@ extension.runtime.onInstalled.addListener(({ reason }) => {
     platform.openExtensionInBrowser()
   }
 })
+
+/**
+ * Set up listeners for managing tab creation.
+ */
+function setupBrowserListeners () {
+  extension.tabs.onRemoved.addListener(handleTabRemoved)
+
+  /**
+   * Register that a particular origin no longer has any open tabs.
+   * @param {string} tabId - The ID of the tab that was removed.
+   */
+  function handleTabRemoved (tabId, _removedInfo) {
+
+    const origin = externallyOpenedTabIds.get(tabId)
+
+    if (origin) {
+      originsWithOpenTabs.delete(origin)
+      externallyOpenedTabIds.delete(tabId)
+    }
+  }
+}
+
+/**
+ * Opens the extension in a new browser tab, due to an action or request by the
+ * given origin. If the origin is invalid, logs an error and takes no action.
+ *
+ * @param {string} opts.origin - The origin that triggered the extension to be opened.
+ * @param {string} [opts.route] - The route to add to the extension URL.
+ * @param {string} [opts.queryString] - The query string to add to the extension URL.
+ */
+async function openExtensionInBrowserExternal ({
+  origin,
+  route,
+  queryString,
+}) {
+
+  if (typeof origin !== 'string' || !origin) {
+    log.error(`Received externally triggered openExtensionInBrowser with invalid origin '${origin}'. Ignoring.`)
+    return
+  }
+
+  if (!originsWithOpenTabs.has(origin)) {
+
+    originsWithOpenTabs.add(origin)
+
+    try {
+
+      const tab = await platform.openExtensionInBrowser(route, queryString)
+
+      if (tab && tab.id) {
+        externallyOpenedTabIds.set(tab.id, origin)
+      }
+    } catch (err) {
+
+      log.error(`Error when opening tab for origin '${origin}'`, err)
+      originsWithOpenTabs.delete(origin)
+    }
+  }
+  return
+}

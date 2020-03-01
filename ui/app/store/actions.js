@@ -2411,9 +2411,9 @@ export function setOpenMetamaskTabsIDs (openMetaMaskTabIDs) {
   }
 }
 
-export function getOpenMetamaskTabsIds () {
+export function getOpenMetamaskTabIds () {
   return async (dispatch) => {
-    const openMetaMaskTabIDs = await pify(background.getOpenMetamaskTabsIds).call(background)
+    const openMetaMaskTabIDs = await pify(background.getOpenMetamaskTabIds).call(background)
     dispatch(setOpenMetamaskTabsIDs(openMetaMaskTabIDs))
   }
 }
