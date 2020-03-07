@@ -9,42 +9,9 @@
     "value-no-vendor-prefix": true,
     "value-list-comma-newline-before": "never-multi-line",
     "custom-property-empty-line-before": "never",
-    "property-no-unknown": [
-      true,
-      {
-        "ignoreProperties": [
-          "composes",
-          "all",
-          "-webkit-appearance"
-        ]
-      }
-    ],
-    "declaration-block-semicolon-newline-after": "always",
-    "block-opening-brace-newline-after": "always",
     "selector-attribute-quotes": "always",
     "selector-max-specificity": "0,5,2",
-    "selector-pseudo-class-no-unknown": [
-      true,
-      {
-        "ignorePseudoClasses": ["local", "global"]
-      }
-    ],
-    "at-rule-empty-line-before": [
-      "always",
-      {
-        "ignore": [
-          "after-comment"
-        ]
-      }
-    ],
-    "indentation": [
-      2,
-      {
-        "indentInsideParens": "once-at-root-twice-in-block"
-      }
-    ],
     "max-nesting-depth": 3,
-    "no-duplicate-selectors": true,
     "no-unknown-animations": true
   }
 }
