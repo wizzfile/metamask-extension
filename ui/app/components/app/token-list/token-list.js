@@ -171,14 +171,14 @@ const TokenList = () => {
   }
 
   return (
-    <div>
+    <>
       {tokensWithBalances.map((tokenData, index) => {
         tokenData.image = assetImages[tokenData.address]
         return (
           <TokenCell key={index} {...tokenData} />
         )
       })}
-    </div>
+    </>
   )
 }
 

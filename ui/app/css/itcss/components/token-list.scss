@@ -10,7 +10,6 @@ $wallet-balance-breakpoint-range: "screen and (min-width: #{$break-large}) and (
   transition: linear 200ms;
   background-color: rgba($wallet-balance-bg, 0);
   position: relative;
-  flex: 1;
   min-width: 0;
 
   &__token-balance {
