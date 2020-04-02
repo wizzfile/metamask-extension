@@ -310,6 +310,20 @@ export class PermissionsController {
   }
 
   /**
+   * Expose an account to the given origin. Changes the eth_accounts
+   * permissions and emits accountsChanged.
+   *
+   * Throws error if the update fails.
+   *
+   * @param {string} origin - The origin to expose the account to.
+   * @param {string} account - The new account to expose.
+   */
+  async addPermittedAccount (origin, account) {
+    const permittedAccounts = await this.getAccounts(origin)
+    return this.updatePermittedAccounts(origin, [account, ...permittedAccounts])
+  }
+
+  /**
    * Finalizes a permissions request. Throws if request validation fails.
    * Clones the passed-in parameters to prevent inadvertent modification.
    * Sets (adds or replaces) caveats for the following permissions:

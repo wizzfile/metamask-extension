@@ -468,6 +468,9 @@
   "directDepositEtherExplainer": {
     "message": "If you already have some Ether, the quickest way to get Ether in your new wallet by direct deposit."
   },
+  "dismiss": {
+    "message": "Dismiss"
+  },
   "done": {
     "message": "Done"
   },
@@ -1548,6 +1551,12 @@
   },
   "unapproved": {
     "message": "Unapproved"
+  },
+  "unconnectedAccountAlertTitle": {
+    "message": "Not Connected"
+  },
+  "unconnectedAccountAlertDescription": {
+    "message": "This account is not connected to this site"
   },
   "units": {
     "message": "units"

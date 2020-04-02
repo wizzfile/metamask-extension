@@ -15,6 +15,11 @@ import { setCustomGasLimit } from '../ducks/gas/gas.duck'
 import txHelper from '../../lib/tx-helper'
 import { getEnvironmentType } from '../../../app/scripts/lib/util'
 import actionConstants from './actionConstants'
+import {
+  getPermittedAccountsForCurrentTab,
+  getSelectedAddress,
+} from '../selectors/selectors'
+import { switchedToUnconnectedAccount } from '../ducks/alerts/unconnected-account'
 
 let background = null
 export function _setBackgroundConnection (backgroundConnection) {
@@ -296,7 +301,12 @@ export function addNewKeyring (type, opts) {
 }
 
 export function importNewAccount (strategy, args) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
+    const state = getState()
+    const selectedAddress = getSelectedAddress(state)
+    const permittedAccountsForCurrentTab = getPermittedAccountsForCurrentTab(state)
+    const currentTabIsConnectedToPreviousAddress = permittedAccountsForCurrentTab.includes(selectedAddress)
+
     let newState
     dispatch(showLoadingIndication('This may take a while, please be patient.'))
     try {
@@ -316,6 +326,15 @@ export function importNewAccount (strategy, args) {
         type: actionConstants.SHOW_ACCOUNT_DETAIL,
         value: newState.selectedAddress,
       })
+
+      // Ensure newly imported account isn't already connected to active tab before prompting user to connect
+      // This check is here because we don't purge accounts from permissions when they are removed
+      // TODO: Remove this check once accounts are purged upon deletion
+      const currentTabIsConnectedToNextAddress = permittedAccountsForCurrentTab.includes(newState.selectedAddress)
+      const switchingToUnconnectedAddress = currentTabIsConnectedToPreviousAddress && !currentTabIsConnectedToNextAddress
+      if (switchingToUnconnectedAddress) {
+        dispatch(switchedToUnconnectedAccount(newState.selectedAddress))
+      }
     }
     return newState
   }
@@ -1209,9 +1228,17 @@ export function setSelectedAddress (address) {
 }
 
 export function showAccountDetail (address) {
-  return (dispatch) => {
+  return (dispatch, getState) => {
     dispatch(showLoadingIndication())
     log.debug(`background.setSelectedAddress`)
+
+    const state = getState()
+    const selectedAddress = getSelectedAddress(state)
+    const permittedAccountsForCurrentTab = getPermittedAccountsForCurrentTab(state)
+    const currentTabIsConnectedToPreviousAddress = permittedAccountsForCurrentTab.includes(selectedAddress)
+    const currentTabIsConnectedToNextAddress = permittedAccountsForCurrentTab.includes(address)
+    const switchingToUnconnectedAddress = currentTabIsConnectedToPreviousAddress && !currentTabIsConnectedToNextAddress
+
     background.setSelectedAddress(address, (err, tokens) => {
       dispatch(hideLoadingIndication())
       if (err) {
@@ -1223,8 +1250,25 @@ export function showAccountDetail (address) {
         type: actionConstants.SHOW_ACCOUNT_DETAIL,
         value: address,
       })
+      if (switchingToUnconnectedAddress) {
+        dispatch(switchedToUnconnectedAccount(address))
+      }
       dispatch(setSelectedToken())
     })
+  }
+}
+
+export function addPermittedAccount (origin, address) {
+  return async (dispatch) => {
+    await new Promise((resolve, reject) => {
+      background.addPermittedAccount(origin, address, (error) => {
+        if (error) {
+          return reject(error)
+        }
+        resolve()
+      })
+    })
+    await forceUpdateMetamaskState(dispatch)
   }
 }
 

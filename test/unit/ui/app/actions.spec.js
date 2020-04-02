@@ -368,19 +368,19 @@ describe('Actions', function () {
       importAccountWithStrategySpy.restore()
     })
 
-    it('calls importAccountWithStrategies in background', function () {
-      const store = mockStore()
+    it('calls importAccountWithStrategies in background', async function () {
+      const store = mockStore({ metamask: devState })
 
       importAccountWithStrategySpy = sinon.spy(background, 'importAccountWithStrategy')
 
       const importPrivkey = 'c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3'
 
-      store.dispatch(actions.importNewAccount('Private Key', [ importPrivkey ]))
+      await store.dispatch(actions.importNewAccount('Private Key', [ importPrivkey ]))
       assert(importAccountWithStrategySpy.calledOnce)
     })
 
     it('displays warning error message when importAccount in background callback errors', async function () {
-      const store = mockStore()
+      const store = mockStore({ metamask: devState })
 
       const expectedActions = [
         { type: 'SHOW_LOADING_INDICATION', value: 'This may take a while, please be patient.' },
@@ -1056,14 +1056,14 @@ describe('Actions', function () {
     })
 
     it('#showAccountDetail', function () {
-      const store = mockStore()
+      const store = mockStore({ metamask: devState })
 
       store.dispatch(actions.showAccountDetail())
       assert(setSelectedAddressSpy.calledOnce)
     })
 
     it('displays warning if setSelectedAddress throws', function () {
-      const store = mockStore()
+      const store = mockStore({ metamask: devState })
       const expectedActions = [
         { type: 'SHOW_LOADING_INDICATION', value: undefined },
         { type: 'HIDE_LOADING_INDICATION' },
