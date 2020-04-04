@@ -51,11 +51,8 @@ export default class Home extends PureComponent {
     threeBoxLastUpdated: PropTypes.number,
     hasDaiV1Token: PropTypes.bool,
     firstPermissionsRequestId: PropTypes.string,
-  }
-
-  state = {
-    hidePopover: false,
-
+    setConnectedStatusPopoverHasBeenShown: PropTypes.func,
+    connectedStatusPopoverHasBeenShown: PropTypes.bool,
   }
 
   UNSAFE_componentWillMount () {
@@ -165,16 +162,24 @@ export default class Home extends PureComponent {
     )
   }
   renderPopover = () => {
+    const { setConnectedStatusPopoverHasBeenShown } = this.props
     const { t } = this.context
     return (
       <Popover
         title={ t('whatsthis') }
-        onClose={() => {
-          this.setState({ hidePopover: true })
-        }}
+        onClose={() => setConnectedStatusPopoverHasBeenShown()}
         className="home__connected-status-popover"
         showTooltip
-        backgroundClass="home__connected-status-popover-bg"
+        CustomBackground={({ onClose }) => {
+          return (
+            <div
+              className="home__connected-status-popover-bg-container"
+              onClick={onClose}
+            >
+              <div className="home__connected-status-popover-bg" />
+            </div>
+          )
+        }}
       >
         <main className="home__connect-status-text">
           <div>{ t('metaMaskConnectStatusParagraphOne') }</div>
@@ -184,9 +189,7 @@ export default class Home extends PureComponent {
           <Button
             type="primary"
             className="home__connect-status-button"
-            onClick={() => {
-              this.setState({ hidePopover: true })
-            }}
+            onClick={() => setConnectedStatusPopoverHasBeenShown()}
           >
             { t('dismiss') }
           </Button>
@@ -199,8 +202,9 @@ export default class Home extends PureComponent {
     const {
       forgottenPassword,
       history,
+      connectedStatusPopoverHasBeenShown,
+      isPopup,
     } = this.props
-    const { hidePopover } = this.state
 
     if (forgottenPassword) {
       return <Redirect to={{ pathname: RESTORE_VAULT_ROUTE }} />
@@ -214,7 +218,7 @@ export default class Home extends PureComponent {
       <div className="main-container">
         <Route path={CONNECTED_ROUTE} component={ConnectedSites} />
         <div className="home__container">
-          { hidePopover ? null : this.renderPopover() }
+          { isPopup && !connectedStatusPopoverHasBeenShown ? this.renderPopover() : null }
           <Media
             query="(min-width: 576px)"
           >

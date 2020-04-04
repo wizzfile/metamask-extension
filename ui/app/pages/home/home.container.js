@@ -9,6 +9,7 @@ import {
   turnThreeBoxSyncingOn,
   getThreeBoxLastUpdated,
   setShowRestorePromptToFalse,
+  setConnectedStatusPopoverHasBeenShown,
 } from '../../store/actions'
 import { setThreeBoxLastUpdated } from '../../ducks/app/app'
 import { getEnvironmentType } from '../../../../app/scripts/lib/util'
@@ -23,6 +24,7 @@ const mapStateToProps = (state) => {
     threeBoxSynced,
     showRestorePrompt,
     selectedAddress,
+    connectedStatusPopoverHasBeenShown,
   } = metamask
   const accountBalance = getCurrentEthBalance(state)
   const { forgottenPassword, threeBoxLastUpdated } = appState
@@ -45,6 +47,7 @@ const mapStateToProps = (state) => {
     threeBoxLastUpdated,
     hasDaiV1Token: Boolean(getDaiV1Token(state)),
     firstPermissionsRequestId,
+    connectedStatusPopoverHasBeenShown,
   }
 }
 
@@ -63,6 +66,7 @@ const mapDispatchToProps = (dispatch) => ({
   },
   restoreFromThreeBox: (address) => dispatch(restoreFromThreeBox(address)),
   setShowRestorePromptToFalse: () => dispatch(setShowRestorePromptToFalse()),
+  setConnectedStatusPopoverHasBeenShown: () => dispatch(setConnectedStatusPopoverHasBeenShown()),
 })
 
 export default compose(
