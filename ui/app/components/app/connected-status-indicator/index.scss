@@ -22,6 +22,7 @@
   }
 
   &__text {
+    @extend %font;
     font-size: 10px;
     color: $Grey-500;
     margin-left: 8px;

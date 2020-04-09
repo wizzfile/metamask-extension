@@ -1,6 +1,8 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import Tooltip from '../../ui/tooltip'
+import Button from '../../ui/button'
+import Popover from '../../ui/experimental-popover-with-hole-and-arrow'
 import SelectedAccount from '../selected-account'
 import ConnectedStatusIndicator from '../connected-status-indicator'
 import AccountDetailsDropdown from '../dropdowns/account-details-dropdown'
@@ -15,6 +17,39 @@ export default class MenuBar extends PureComponent {
 
   state = { accountDetailsMenuOpen: false }
 
+  renderPopover = () => {
+    const { t } = this.context
+    return (
+      <Popover
+        title={ t('whatsthis') }
+        onClose={() => {}}
+        className="home__connected-status-popover"
+        showArrow
+        PopoverContent={() => {
+          return (
+            <>
+              <main className="home__connect-status-text">
+                <div>{ t('metaMaskConnectStatusParagraphOne') }</div>
+                <div>{ t('metaMaskConnectStatusParagraphTwo') }</div>
+              </main>
+              <div className="home__connect-status-button-container">
+                <Button
+                  type="primary"
+                  className="home__connect-status-button"
+                  onClick={() => {}}
+                >
+                  { t('dismiss') }
+                </Button>
+              </div>
+            </>
+          )
+        }}
+      >
+        <ConnectedStatusIndicator />
+      </Popover>
+    )
+  }
+
   render () {
     const { t } = this.context
     const { accountDetailsMenuOpen } = this.state
@@ -23,7 +58,7 @@ export default class MenuBar extends PureComponent {
       <div className="menu-bar">
         {
           getEnvironmentType() === ENVIRONMENT_TYPE_POPUP
-            ? <ConnectedStatusIndicator />
+            ? this.renderPopover()
             : null
         }
 
