@@ -387,7 +387,7 @@ function setupController (initState, initLangCode) {
         openMetamaskTabIds[tabId] = true
 
         endOfStream(portStream, () => {
-          delete openMetamaskTabIds[tabId]
+          handleTabRemoved(tabId)
           controller.isClientOpen = isClientOpenStatus()
         })
       }
@@ -499,19 +499,21 @@ extension.runtime.onInstalled.addListener(({ reason }) => {
  */
 function setupBrowserListeners () {
   extension.tabs.onRemoved.addListener(handleTabRemoved)
+}
 
-  /**
-   * Register that a particular origin no longer has any open tabs.
-   * @param {string} tabId - The ID of the tab that was removed.
-   */
-  function handleTabRemoved (tabId, _removedInfo) {
+/**
+ * Register that a particular origin no longer has any open tabs.
+ * @param {string} tabId - The ID of the tab that was removed.
+ */
+function handleTabRemoved (tabId, _removedInfo) {
 
-    const origin = externallyOpenedTabIds.get(tabId)
+  delete openMetamaskTabIds[tabId]
 
-    if (origin) {
-      originsWithOpenTabs.delete(origin)
-      externallyOpenedTabIds.delete(tabId)
-    }
+  const origin = externallyOpenedTabIds.get(tabId)
+
+  if (origin) {
+    originsWithOpenTabs.delete(origin)
+    externallyOpenedTabIds.delete(tabId)
   }
 }
 
